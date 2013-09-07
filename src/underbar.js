@@ -16,16 +16,33 @@ var _ = { };
   // Return an array of the first n elements of an array. If n is undefined,
   // return just the first element.
   _.first = function(array, n) {
+  		if (n == undefined){
+  			return array[0];
+  		}
+  		return array.slice(0,n);
   };
 
   // Like first, but for the last elements. If n is undefined, return just the
   // last element.
   _.last = function(array, n) {
+  		if (n == undefined){
+  			return array[array.length - 1];
+  		}
+  		return array.slice(Math.max(array.length - n, 0));
   };
 
   // Call iterator(value, key, collection) for each element of collection.
   // Accepts both arrays and objects.
   _.each = function(collection, iterator) {
+  	if (collection.isArray) {
+  		for (var i = 0; i < collection.length; i++) {
+  			iterator(collection[0],i,collection);
+  		}
+  	} else {
+  		for (var key in collection) {
+  			iterator(collection[key], key, collection);
+  		}
+  	}
   };
 
   // Returns the index at which value can be found in the array, or -1 if value
@@ -34,20 +51,46 @@ var _ = { };
     // TIP: Here's an example of a function that needs to iterate, which we've
     // implemented for you. Instead of using a standard `for` loop, though,
     // it uses the iteration helper `each`, which you will need to write.
+    var result;
+
+    _.each(array, function(coll,index,array){
+    	if (target === coll) {
+    		result = result || parseInt(index);
+    	}
+    });
+    return result || -1;
   };
 
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, iterator) {
+  	var result = [];
+  	_.each(collection,function(coll, index, array) {
+  		if (iterator(coll)){
+  			result.push(coll);
+  		}
+  	});
+  	return result;
   };
 
   // Return all elements of an array that don't pass a truth test.
   _.reject = function(collection, iterator) {
     // TIP: see if you can re-use _.select() here, without simply
     // copying code in and modifying it
+
+    return _.filter(collection, function(coll, index,array){
+    	return (!iterator(coll));
+    });
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
+  	var results = [];
+  	_.each(array, function(coll,index,collection){
+  		if(!_.contains(results,coll)){
+  			results.push(coll);
+  		}
+  	});
+  	return results;
   };
 
 
@@ -56,6 +99,11 @@ var _ = { };
     // map() is a useful primitive iteration function that works a lot
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
+    var results = [];
+    _.each(array, function(coll,index,collection){
+    	results.push(iterator(coll));
+    });
+    return results;
   };
 
   /*
@@ -78,7 +126,11 @@ var _ = { };
 
   // Calls the method named by methodName on each value in the list.
   _.invoke = function(list, methodName, args) {
-  };
+
+ 	return _.map(list, function(value) {
+      return ((methodName instanceof Function) ? methodName : value[methodName]).apply(value, args);
+    });
+  }; 
 
   // Reduces an array or object to a single value by repetitively calling
   // iterator(previousValue, item) for each item. previousValue should be
@@ -94,6 +146,11 @@ var _ = { };
   //   }, 0); // should be 6
   //
   _.reduce = function(collection, iterator, initialValue) {
+  	var result = initialValue || 0;
+  	_.each(collection,function(coll, index, array){
+  		result = iterator(result,coll);
+  	});
+  	return result;
   };
 
   // Determine if the array or object contains a given value (using `===`).
@@ -112,12 +169,28 @@ var _ = { };
   // Determine whether all of the elements match a truth test.
   _.every = function(collection, iterator) {
     // TIP: Try re-using reduce() here.
+    var iterator = iterator || function(i) { return i; };
+    var truth = true
+	var result = _.reduce(collection, function(a,b){
+		if (!iterator(b)){
+			truth = false;
+		}
+	});
+	return truth;
   };
 
   // Determine whether any of the elements pass a truth test. If no iterator is
   // provided, provide a default one
   _.some = function(collection, iterator) {
     // TIP: There's a very clever way to re-use every() here.
+    var truth = false;
+    var iterator = iterator || function(i) { return i; };
+    var result = _.every(collection, function(value){
+    	if (iterator(value)){
+    		truth = true;
+    	}
+    });
+    return truth;
   };
 
 
@@ -140,11 +213,27 @@ var _ = { };
   //     bla: "even more stuff"
   //   }); // obj1 now contains key1, key2, key3 and bla
   _.extend = function(obj) {
+  	 _.each(arguments, function(source) {
+      if (source) {
+        for (var prop in source) {
+          obj[prop] = source[prop];
+        }
+      }
+    });
+  	 return obj;
   };
 
   // Like extend, but doesn't ever overwrite a key that already
   // exists in obj
   _.defaults = function(obj) {
+  	 _.each(arguments, function(source) {
+      if (source) {
+        for (var prop in source) {
+          if (obj[prop] === undefined) obj[prop] = source[prop];
+        }
+      }
+    });
+  	 return obj;
   };
 
 
@@ -185,6 +274,15 @@ var _ = { };
   // already computed the result for the given argument and return that value
   // instead if possible.
   _.memoize = function(func) {
+  	var results = {};
+  	return function(value){
+  		if (results[value]) {
+  			return results[value];
+  		} else {
+  			results[value] = func.apply(this, arguments);
+  			return results[value];
+  		}
+  	}
   };
 
   // Delays a function for the given number of milliseconds, and then calls
@@ -194,6 +292,8 @@ var _ = { };
   // parameter. For example _.delay(someFunction, 500, 'a', 'b') will
   // call someFunction('a', 'b') after 500ms
   _.delay = function(func, wait) {
+  	var args = Array.prototype.slice.call(arguments,2);
+  	setTimeout(function() { func.apply(null, args); }, wait);
   };
 
 
@@ -204,6 +304,16 @@ var _ = { };
 
   // Shuffle an array.
   _.shuffle = function(array) {
+  	var my_array = array.slice(0);
+  	var i = my_array.length, j, temp;
+	while ( --i )
+	{
+		j = Math.floor( Math.random() * (i - 1) );
+		temp = my_array[i];
+		my_array[i] = my_array[j];
+		my_array[j] = temp;
+	}
+	return my_array;
   };
 
 
