@@ -34,9 +34,9 @@ var _ = { };
   // Call iterator(value, key, collection) for each element of collection.
   // Accepts both arrays and objects.
   _.each = function(collection, iterator) {
-  	if (collection.isArray) {
+  	if (Array.isArray(collection)) {
   		for (var i = 0; i < collection.length; i++) {
-  			iterator(collection[0],i,collection);
+  			iterator(collection[i],i,collection);
   		}
   	} else {
   		for (var key in collection) {
@@ -53,9 +53,9 @@ var _ = { };
     // it uses the iteration helper `each`, which you will need to write.
     var result;
 
-    _.each(array, function(coll,index,array){
-    	if (target === coll) {
-    		result = result || parseInt(index);
+    _.each(array, function(val,index){
+    	if (target === val) {
+    		result = result || index;
     	}
     });
     return result || -1;
@@ -64,9 +64,9 @@ var _ = { };
   // Return all elements of an array that pass a truth test.
   _.filter = function(collection, iterator) {
   	var result = [];
-  	_.each(collection,function(coll, index, array) {
-  		if (iterator(coll)){
-  			result.push(coll);
+  	_.each(collection,function(val) {
+  		if (iterator(val)){
+  			result.push(val);
   		}
   	});
   	return result;
@@ -77,17 +77,17 @@ var _ = { };
     // TIP: see if you can re-use _.select() here, without simply
     // copying code in and modifying it
 
-    return _.filter(collection, function(coll, index,array){
-    	return (!iterator(coll));
+    return _.filter(collection, function(val){
+    	return (!iterator(val));
     });
   };
 
   // Produce a duplicate-free version of the array.
   _.uniq = function(array) {
   	var results = [];
-  	_.each(array, function(coll,index,collection){
-  		if(!_.contains(results,coll)){
-  			results.push(coll);
+  	_.each(array, function(val){
+  		if(!_.contains(results,val)){
+  			results.push(val);
   		}
   	});
   	return results;
@@ -100,8 +100,8 @@ var _ = { };
     // like each(), but in addition to running the operation on all
     // the members, it also maintains an array of results.
     var results = [];
-    _.each(array, function(coll,index,collection){
-    	results.push(iterator(coll));
+    _.each(array, function(val){
+    	results.push(iterator(val));
     });
     return results;
   };
@@ -147,8 +147,8 @@ var _ = { };
   //
   _.reduce = function(collection, iterator, initialValue) {
   	var result = initialValue || 0;
-  	_.each(collection,function(coll, index, array){
-  		result = iterator(result,coll);
+  	_.each(collection,function(val){
+  		result = iterator(result,val);
   	});
   	return result;
   };
